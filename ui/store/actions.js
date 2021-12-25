@@ -2679,9 +2679,10 @@ export function loadingMethodDataFinished() {
   };
 }
 
-export async function getTokenStandardAndDetails(address, tokenId) {
+export async function getTokenStandardAndDetails(address, userAddress, tokenId) {
   return await promisifiedBackground.getTokenStandardAndDetails(
     address,
+    userAddress,
     tokenId,
   );
 }
