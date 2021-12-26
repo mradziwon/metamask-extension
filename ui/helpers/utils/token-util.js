@@ -224,6 +224,10 @@ export async function getAssetDetails(
   tokenList,
 ) {
   const tokenData = getTokenData(transactionData);
+  if (!tokenData) {
+    throw new Error('Unable to detect valid token data');
+  }
+
   const tokenValue = getTokenValueParam(tokenData);
   // TODO Rename these methods because this actually gives tokenId when ERC721
   const tokenId = calcTokenAmount(tokenValue).toString(10);

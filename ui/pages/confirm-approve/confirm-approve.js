@@ -66,11 +66,12 @@ export default function ConfirmApprove({ transaction }) {
   const networkAndAccountSupports1559 = useSelector(
     checkNetworkAndAccountSupports1559,
   );
-  const [customPermissionAmount, setCustomPermissionAmount] = useState('');
-
   const fromAddressIsLedger = useSelector(
     isAddressLedgerByFromAddress(userAddress),
   );
+  const [customPermissionAmount, setCustomPermissionAmount] = useState('');
+  const [submitWarning, setSubmitWarning] = useState('');
+  const [isContract, setIsContract] = useState(false);
 
   const {
     ethTransactionTotal,
@@ -94,7 +95,6 @@ export default function ConfirmApprove({ transaction }) {
   } = useAssetDetails(tokenAddress, userAddress, transactionData);
 
   const previousTokenAmount = useRef(tokenAmount);
-
   const {
     approveTransaction,
     showCustomizeGasPopover,
@@ -108,7 +108,6 @@ export default function ConfirmApprove({ transaction }) {
     previousTokenAmount.current = tokenAmount;
   }, [customPermissionAmount, tokenAmount]);
 
-  const [submitWarning, setSubmitWarning] = useState('');
   const prevNonce = useRef(nextNonce);
   const prevCustomNonce = useRef(customNonceValue);
   useEffect(() => {
@@ -127,8 +126,6 @@ export default function ConfirmApprove({ transaction }) {
     prevCustomNonce.current = customNonceValue;
     prevNonce.current = nextNonce;
   }, [customNonceValue, nextNonce]);
-
-  const [isContract, setIsContract] = useState(false);
 
   const checkIfContract = useCallback(async () => {
     const { isContractAddress } = await readAddressAsContract(
