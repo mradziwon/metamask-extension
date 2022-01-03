@@ -261,7 +261,7 @@ export async function getAssetDetails(
         standard: tokenDetails?.standard,
       };
     } else {
-      return tokenDetailss;
+      return tokenDetails;
     }
   } else if (tokenDetails?.standard === 'ERC20') {
     const existingToken = existingTokens.find(({ address }) =>
