@@ -102,7 +102,7 @@ export function useTransactionDisplayData(transactionGroup) {
   // transfers, we pass an additional argument to these hooks that will be
   // false for non-token transactions. This additional argument forces the
   // hook to return null
-  const token =
+  const knownToken =
     isTokenCategory &&
     knownTokens.find(({ address }) =>
       isEqualCaseInsensitive(address, recipientAddress),
@@ -117,7 +117,7 @@ export function useTransactionDisplayData(transactionGroup) {
   // If it is an ERC721 token transaction it is the tokenId being sent
   const tokenAmountOrTokenId = getTokenValueParam(tokenData);
 
-  const collectible =
+  const knownCollectible =
     isTokenCategory &&
     knownCollectibles.find(
       ({ address, tokenId }) =>
@@ -125,27 +125,33 @@ export function useTransactionDisplayData(transactionGroup) {
         tokenId === tokenAmountOrTokenId,
     );
 
-  const tokenDisplayValue = useTokenDisplayValue(
-    initialTransaction?.txParams?.data,
-    token,
-    isTokenCategory,
-  );
-  const tokenFiatAmount = useTokenFiatAmount(
-    token?.address,
-    tokenDisplayValue,
-    token?.symbol,
-  );
+  // TODO NEED TO BRANCH LOGIC HERE BASED ON STANDARD
+  let assetDisplayValue, tokenFiatAmount;
+  if (knownToken) {
+    assetDisplayValue = useTokenDisplayValue(
+      initialTransaction?.txParams?.data,
+      knownToken,
+      isTokenCategory,
+    );
+    tokenFiatAmount = useTokenFiatAmount(
+      knownToken?.address,
+      assetDisplayValue,
+      knownToken?.symbol,
+    );
+  } else if (knownCollectible) {
+    assetDisplayValue = ' ';
+  }
 
   const origin = stripHttpSchemes(
     initialTransaction.origin || initialTransaction.msgParams?.origin || '',
   );
 
-  // used to append to the primary display value. initialized to either token.symbol or undefined
+  // used to append to the primary display value. initialized to either knownToken.symbol or undefined
   // but can later be modified if dealing with a swap
-  let primarySuffix = isTokenCategory ? token?.symbol : undefined;
-  // used to display the primary value of tx. initialized to either tokenDisplayValue or undefined
+  let primarySuffix = knownToken?.symbol ?? knownCollectible?.name ?? undefined;
+  // used to display the primary value of tx. initialized to either assetDisplayValue or undefined
   // but can later be modified if dealing with a swap
-  let primaryDisplayValue = isTokenCategory ? tokenDisplayValue : undefined;
+  let primaryDisplayValue = isTokenCategory ? assetDisplayValue : undefined;
   // used to display fiat amount of tx. initialized to either tokenFiatAmount or undefined
   // but can later be modified if dealing with a swap
   let secondaryDisplayValue = isTokenCategory ? tokenFiatAmount : undefined;
@@ -214,7 +220,7 @@ export function useTransactionDisplayData(transactionGroup) {
   } else if (type === TRANSACTION_TYPES.TOKEN_METHOD_APPROVE) {
     category = TRANSACTION_GROUP_CATEGORIES.APPROVAL;
     prefix = '';
-    title = t('approveSpendLimit', [token?.symbol || t('token')]);
+    title = t('approveSpendLimit', [knownToken?.symbol || t('token')]);
     subtitle = origin;
     subtitleContainsOrigin = true;
   } else if (
@@ -239,7 +245,7 @@ export function useTransactionDisplayData(transactionGroup) {
   ) {
     category = TRANSACTION_GROUP_CATEGORIES.SEND;
     title = t('sendSpecifiedTokens', [
-      token?.symbol || collectible?.name || t('token'),
+      knownToken?.symbol || knownCollectible?.name || t('token'),
     ]);
     recipientAddress = getTokenAddressParam(tokenData);
     subtitle = t('toAddress', [shortenAddress(recipientAddress)]);

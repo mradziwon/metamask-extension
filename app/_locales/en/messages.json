@@ -458,6 +458,10 @@
   "close": {
     "message": "Close"
   },
+  "collectibleAddressError": {
+    "message": "It appears the token you are attempting to add is an NFT. This token should be added on the $1",
+    "description": "$1 is a clickable link with text defined by the 'importNFTPage' key"
+  },
   "confirm": {
     "message": "Confirm"
   },
@@ -1385,6 +1389,12 @@
   },
   "importMyWallet": {
     "message": "Import My Wallet"
+  },
+  "importNFT": {
+    "message": "Import NFT"
+  },
+  "importNFTPage": {
+    "message": "Import NFT page"
   },
   "importNFTs": {
     "message": "Import NFTs"
