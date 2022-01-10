@@ -113,6 +113,17 @@ export function useTransactionDisplayData(transactionGroup) {
     isTokenCategory,
   );
 
+  let assetDisplayValue = useTokenDisplayValue(
+    initialTransaction?.txParams?.data,
+    knownToken,
+    isTokenCategory,
+  );
+  const tokenFiatAmount = useTokenFiatAmount(
+    knownToken?.address,
+    assetDisplayValue,
+    knownToken?.symbol,
+  );
+
   // If this is an ERC20 token transaction this value is equal to the amount sent
   // If it is an ERC721 token transaction it is the tokenId being sent
   const tokenAmountOrTokenId = getTokenValueParam(tokenData);
@@ -125,20 +136,7 @@ export function useTransactionDisplayData(transactionGroup) {
         tokenId === tokenAmountOrTokenId,
     );
 
-  // TODO NEED TO BRANCH LOGIC HERE BASED ON STANDARD
-  let assetDisplayValue, tokenFiatAmount;
-  if (knownToken) {
-    assetDisplayValue = useTokenDisplayValue(
-      initialTransaction?.txParams?.data,
-      knownToken,
-      isTokenCategory,
-    );
-    tokenFiatAmount = useTokenFiatAmount(
-      knownToken?.address,
-      assetDisplayValue,
-      knownToken?.symbol,
-    );
-  } else if (knownCollectible) {
+  if (knownCollectible) {
     assetDisplayValue = ' ';
   }
 

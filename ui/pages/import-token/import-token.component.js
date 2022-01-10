@@ -47,6 +47,8 @@ class ImportToken extends Component {
     rpcPrefs: PropTypes.object,
     tokenList: PropTypes.object,
     useTokenDetection: PropTypes.bool,
+    getTokenStandardAndDetails: PropTypes.func,
+    selectedAddress: PropTypes.string,
   };
 
   static defaultProps = {
@@ -228,8 +230,9 @@ class ImportToken extends Component {
         this.setState({
           collectibleAddressError: this.context.t('collectibleAddressError', [
             <a
-              className='import-token__collectible-address-error-link'
+              className="import-token__collectible-address-error-link"
               onClick={() => this.props.history.push(ADD_COLLECTIBLE_ROUTE)}
+              key="collectibleAddressError"
             >
               {this.context.t('importNFTPage')}
             </a>,

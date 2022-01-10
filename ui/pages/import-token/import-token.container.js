@@ -1,6 +1,10 @@
 import { connect } from 'react-redux';
 
-import { setPendingTokens, clearPendingTokens, getTokenStandardAndDetails } from '../../store/actions';
+import {
+  setPendingTokens,
+  clearPendingTokens,
+  getTokenStandardAndDetails,
+} from '../../store/actions';
 import { getMostRecentOverviewPage } from '../../ducks/history/history';
 import {
   getRpcPrefsForCurrentProvider,
