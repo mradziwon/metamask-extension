@@ -216,16 +216,30 @@ class ImportToken extends Component {
     const isMainnetNetwork = this.props.chainId === '0x1';
 
     let standard;
-    try {
-      ({ standard } = await this.props.getTokenStandardAndDetails(
-        standardAddress,
-        this.props.selectedAddress,
-      ));
-    } catch (error) {
-      // ignore
+    if (addressIsValid) {
+      try {
+        ({ standard } = await this.props.getTokenStandardAndDetails(
+          standardAddress,
+          this.props.selectedAddress,
+        ));
+      } catch (error) {
+        // ignore
+      }
     }
 
+    const addressIsEmpty = customAddress.length === 0;
+
     switch (true) {
+      case !addressIsValid && !addressIsEmpty:
+        this.setState({
+          customAddressError: this.context.t('invalidAddress'),
+          customSymbol: '',
+          customDecimals: 0,
+          customSymbolError: null,
+          customDecimalsError: null,
+        });
+
+        break;
       case standard === 'ERC1155' || standard === 'ERC721':
         this.setState({
           collectibleAddressError: this.context.t('collectibleAddressError', [
@@ -237,16 +251,6 @@ class ImportToken extends Component {
               {this.context.t('importNFTPage')}
             </a>,
           ]),
-        });
-
-        break;
-      case !addressIsValid:
-        this.setState({
-          customAddressError: this.context.t('invalidAddress'),
-          customSymbol: '',
-          customDecimals: 0,
-          customSymbolError: null,
-          customDecimalsError: null,
         });
 
         break;
@@ -273,7 +277,7 @@ class ImportToken extends Component {
 
         break;
       default:
-        if (customAddress !== emptyAddr) {
+        if (customAddress !== emptyAddr && !addressIsEmpty) {
           this.attemptToAutoFillTokenParams(customAddress);
         }
     }
