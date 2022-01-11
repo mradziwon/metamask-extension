@@ -372,6 +372,7 @@ class ImportToken extends Component {
           fullWidth
           autoFocus
           margin="normal"
+          data-testid="custom-address-input"
         />
         <TextField
           id="custom-symbol"
