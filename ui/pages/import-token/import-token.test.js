@@ -1,12 +1,25 @@
 import React from 'react';
+import { fireEvent } from '@testing-library/react';
 import { renderWithProvider } from '../../../test/lib/render-helpers';
-import ImportToken from './import-token.container';
 import configureStore from '../../store/store';
-import { fireEvent } from '@testing-library/dom';
-import configureMockStore from 'redux-mock-store';
-import { setBackgroundConnection } from '../../../test/jest';
-import thunk from 'redux-thunk';
-import * as Actions from '../../store/actions';
+import {
+  setPendingTokens,
+  clearPendingTokens,
+  getTokenStandardAndDetails,
+} from '../../store/actions';
+import ImportToken from './import-token.container';
+
+jest.mock('../../store/actions', () => ({
+  getTokenStandardAndDetails: jest
+    .fn()
+    .mockImplementation(() => Promise.resolve({ standard: 'ERC20' })),
+  setPendingTokens: jest
+    .fn()
+    .mockImplementation(() => ({ type: 'SET_PENDING_TOKENS' })),
+  clearPendingTokens: jest
+    .fn()
+    .mockImplementation(() => ({ type: 'CLEAR_PENDING_TOKENS' })),
+}));
 
 describe('Import Token', () => {
   const historyStub = jest.fn();
@@ -19,24 +32,26 @@ describe('Import Token', () => {
   };
 
   const render = () => {
-    return renderWithProvider(
-      <ImportToken {...props} />,
-      configureStore({
-        metamask: {
-          tokens: [],
-          provider: { chainId: '0x1' },
-          frequentRpcListDetail: [],
-          identities: {},
-        },
-        history: {
-          mostRecentOverviewPage: '/',
-        },
-      }),
-    );
+    const baseStore = {
+      metamask: {
+        tokens: [],
+        provider: { chainId: '0x1' },
+        frequentRpcListDetail: [],
+        identities: {},
+        selectedAddress: '0x1231231',
+      },
+      history: {
+        mostRecentOverviewPage: '/',
+      },
+    };
+
+    const store = configureStore(baseStore);
+
+    return renderWithProvider(<ImportToken {...props} />, store);
   };
 
   describe('Import Token', () => {
-    it('Add Custom Token button is disabled when no fields are populated', () => {
+    it('add Custom Token button is disabled when no fields are populated', () => {
       const { getByText } = render();
       const customTokenButton = getByText('Custom Token');
       fireEvent.click(customTokenButton);
@@ -87,8 +102,7 @@ describe('Import Token', () => {
       );
     });
 
-    it('Adds custom tokens successfully', () => {
-      const setPendingTokensSpy = jest.spyOn(Actions, 'setPendingTokens');
+    it('adds custom tokens successfully', async () => {
       const { getByText } = render();
       const customTokenButton = getByText('Custom Token');
       fireEvent.click(customTokenButton);
@@ -108,13 +122,13 @@ describe('Import Token', () => {
       });
 
       const tokenPrecision = '2';
-      fireEvent.change(document.getElementById('custom-decimals'), {
+      await fireEvent.change(document.getElementById('custom-decimals'), {
         target: { value: tokenPrecision },
       });
 
       expect(submit).not.toBeDisabled();
       fireEvent.click(submit);
-      expect(setPendingTokensSpy).toHaveBeenCalledWith({
+      expect(setPendingTokens).toHaveBeenCalledWith({
         customToken: {
           address: tokenAddress,
           decimals: Number(tokenPrecision),
@@ -126,14 +140,37 @@ describe('Import Token', () => {
       expect(historyStub).toHaveBeenCalledWith('/confirm-import-token');
     });
 
-    it('Cancels out of import token flow', () => {
-      const clearPendingTokens = jest.spyOn(Actions, 'clearPendingTokens');
+    it('cancels out of import token flow', () => {
       const { getByTestId } = render();
-      const closeButton = getByTestId('header-close-button')
+      const closeButton = getByTestId('header-close-button');
       fireEvent.click(closeButton);
 
       expect(clearPendingTokens).toHaveBeenCalled();
       expect(historyStub).toHaveBeenCalledWith('/');
+    });
+
+    it('sets and error when a token is an NFT', async () => {
+      getTokenStandardAndDetails.mockImplementation(() =>
+        Promise.resolve({ standard: 'ERC721' }),
+      );
+
+      const { getByText } = render();
+      const customTokenButton = getByText('Custom Token');
+      fireEvent.click(customTokenButton);
+
+      const submit = getByText('Add Custom Token');
+      expect(submit).toBeDisabled();
+
+      const tokenAddress = '0x617b3f8050a0BD94b6b1da02B4384eE5B4DF13F4';
+      await fireEvent.change(document.getElementById('custom-address'), {
+        target: { value: tokenAddress },
+      });
+
+      expect(submit).toBeDisabled();
+
+      // The last part of this error message won't be found by getByText because it is wrapped as a link.
+      const errorMessage = getByText('This token is an NFT. Add on the');
+      expect(errorMessage).toBeInTheDocument();
     });
   });
 });
